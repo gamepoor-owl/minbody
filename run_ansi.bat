@@ -73,7 +73,7 @@ if %errorlevel% neq 0 (
     echo.
     echo Press any key to restart with administrator privileges...
     pause > nul
-    powershell -Command "Start-Process cmd -ArgumentList '/c cd /d \"%~dp0\" && \"%~nx0\"' -Verb runAs -WorkingDirectory '%~dp0'"
+    powershell -Command "Start-Process cmd -ArgumentList '/c cd /d \"\"%~dp0\"\" && \"\"%~nx0\"\"' -Verb runAs -WorkingDirectory '\"%~dp0\"'"
     exit /b
 )
 

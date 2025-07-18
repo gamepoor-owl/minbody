@@ -73,7 +73,7 @@ if %errorlevel% neq 0 (
     echo.
     echo 관리자 권한으로 재실행하려면 아무 키나 누르세요...
     pause > nul
-    powershell -Command "Start-Process cmd -ArgumentList '/c cd /d \"%~dp0\" && \"%~nx0\"' -Verb runAs -WorkingDirectory '%~dp0'"
+    powershell -Command "Start-Process cmd -ArgumentList '/c cd /d \"\"%~dp0\"\" && \"\"%~nx0\"\"' -Verb runAs -WorkingDirectory '\"%~dp0\"'"
     exit /b
 )
 
