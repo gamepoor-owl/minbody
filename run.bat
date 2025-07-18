@@ -1,5 +1,7 @@
 @echo off
 chcp 65001 > nul
+setlocal enabledelayedexpansion
+set "CONSOLE_FONT=Consolas"
 title M-Inbody 데미지 미터
 
 echo ===============================================
@@ -69,7 +71,7 @@ if %errorlevel% neq 0 (
 )
 
 REM 애플리케이션 실행 (디버그 모드로 더 자세한 로그 출력)
-java -jar %JAR_FILE% --spring.profiles.active=prod --logging.level.com.hanaset.minbody=DEBUG --logging.level.org.pcap4j=DEBUG
+java -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8 -jar %JAR_FILE% --spring.profiles.active=prod --logging.level.com.hanaset.minbody=DEBUG --logging.level.org.pcap4j=DEBUG
 
 echo.
 echo [INFO] 애플리케이션이 종료되었습니다.
