@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Inbody 데미지 모니터</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #ffffff;
+            font-size: 1.8rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 1px solid #3a3a3a;
+        }
+
+        .stat-card h2 {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .stat-subtitle {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background-color: #4CAF50;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-disconnected {
+            background-color: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .user-table {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            clear: both;
+        }
+
+        .user-table h2 {
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-size: 1.2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        th {
+            background-color: #1f1f1f;
+            color: #a0a0a0;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+        }
+
+        tr:hover {
+            background-color: #333;
+        }
+
+        .damage-bar {
+            background-color: #444;
+            height: 16px;
+            border-radius: 8px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .damage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #FF8E53);
+            transition: width 0.3s ease;
+            border-radius: 8px;
+            min-width: 2px;
+        }
+
+        .damage-percent {
+            position: absolute;
+            right: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: #fff;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            z-index: 1;
+            white-space: nowrap;
+        }
+        
+        .skill-usage-section {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+        
+        .skill-usage-list {
+            max-height: 350px;  /* 10개 항목이 보이도록 조정 */
+            overflow-y: auto;
+            background-color: #1f1f1f;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .skill-usage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 5px;
+            border-bottom: 1px solid #3a3a3a;
+            font-size: 0.85rem;
+            min-height: 35px;  /* 10개가 350px에 맞도록 */
+        }
+        
+        .skill-usage-item:last-child {
+            border-bottom: none;
+        }
+        
+        .skill-usage-time {
+            color: #888;
+            font-size: 0.75rem;
+            font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+            min-width: 55px;
+        }
+        
+        .skill-usage-name {
+            color: #4ECDC4;
+            font-weight: 500;
+            flex: 1;
+            margin: 0 10px;
+            text-align: left;
+        }
+        
+        .skill-usage-damage {
+            font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        
+        .skill-usage-flags {
+            display: flex;
+            gap: 5px;
+            min-width: 80px;
+            justify-content: flex-end;
+        }
+        
+        .damage-flag {
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        .damage-flag.crit {
+            background-color: rgba(255, 215, 0, 0.2);
+            color: #FFD700;
+            border: 1px solid #FFD700;
+        }
+        
+        .damage-flag.addhit {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        
+        .damage-flag.dot {
+            background-color: rgba(156, 39, 176, 0.2);
+            color: #9C27B0;
+            border: 1px solid #9C27B0;
+        }
+
+        .skill-section {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .skill-card {
+            background-color: #1f1f1f;
+            border-radius: 6px;
+            padding: 10px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .skill-name {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 0.9rem;
+        }
+
+        .skill-percent {
+            font-weight: 700;
+            color: #FFD700;
+            font-size: 1rem;
+            background-color: rgba(255, 215, 0, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .skill-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            font-size: 0.8rem;
+        }
+
+        .skill-stat {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .skill-stat-label {
+            color: #888;
+        }
+
+        .skill-stat-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.danger {
+            background-color: #f44336;
+        }
+
+        button.danger:hover {
+            background-color: #da190b;
+        }
+
+        .crit-indicator {
+            color: #FFD700;
+            font-weight: 600;
+        }
+        
+        .user-display-name.me {
+            color: #ff6b6b;
+            font-weight: bold;
+            background-color: rgba(255, 107, 107, 0.1);
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid #ff6b6b;
+            font-size: 0.85rem;
+        }
+
+        .number {
+            font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+            letter-spacing: 0.5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .damage-history {
+            margin-top: 10px;
+            border-top: 1px solid #3a3a3a;
+            padding-top: 8px;
+        }
+
+        .history-title {
+            color: #888;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .history-item {
+            background-color: #3a3a3a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .history-item.crit {
+            background-color: #554400;
+            color: #FFD700;
+            font-weight: bold;
+            border: 1px solid #FFD700;
+        }
+
+        .history-item.dot {
+            background-color: #4a0e4e;
+            color: #ff69b4;
+            font-style: italic;
+        }
+
+        .history-item.addhit {
+            background-color: #1a4d2e;
+            color: #7cfc00;
+            font-weight: 600;
+            border: 1px solid #7cfc00;
+        }
+
+        .history-item.crit.addhit {
+            background: linear-gradient(135deg, #554400 50%, #1a4d2e 50%);
+            color: #FFD700;
+            font-weight: bold;
+            border: 1px solid #FFD700;
+        }
+
+        #connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #2a2a2a;
+            padding: 6px 12px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 0.85rem;
+        }
+
+        .chart-container {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-container h2 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .chart-container {
+                margin-bottom: 30px;
+            }
+            
+            table {
+                font-size: 0.75rem;
+            }
+            
+            th, td {
+                padding: 5px;
+            }
+            
+            .damage-bar {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 1920px) {
+            .container {
+                max-width: 1600px;
+            }
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+    <div id="connection-status">
+        <span class="status-indicator status-disconnected" id="status-indicator"></span>
+        <span id="status-text">연결 끊김</span>
+    </div>
+
+    <div class="container">
+        <h1>M-Inbody 데미지 모니터</h1>
+        
+        <div class="controls">
+            <button onclick="connectWebSocket()">연결</button>
+            <button onclick="disconnectWebSocket()">연결 해제</button>
+            <button class="danger" onclick="clearStats()">통계 초기화</button>
+            <button class="danger" onclick="clearDPS()">DPS 초기화</button>
+            <label style="margin-left: 10px; font-size: 0.85rem; display: flex; align-items: center;">
+                <input type="checkbox" id="singleModeCheckbox" onchange="toggleSingleMode()" style="margin-right: 4px;">
+                <span style="color: #e0e0e0;">허수아비 모드</span>
+            </label>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h2>총 데미지</h2>
+                <div class="stat-value number" id="total-damage">0</div>
+                <div class="stat-subtitle">누적 데미지</div>
+            </div>
+            
+            <div class="stat-card">
+                <h2>초당 데미지</h2>
+                <div class="stat-value number" id="dps">0</div>
+                <div class="stat-subtitle">DPS</div>
+            </div>
+            
+            <div class="stat-card">
+                <h2>전투 시간</h2>
+                <div class="stat-value number" id="duration">0:00</div>
+                <div class="stat-subtitle">경과 시간</div>
+            </div>
+            
+        </div>
+
+        <div class="chart-container">
+            <h2>DPS 타임라인</h2>
+            <div style="height: 350px; position: relative; overflow: hidden; margin-top: 10px;">
+                <canvas id="dpsChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+
+        <div class="user-table">
+            <h2>유저별 데미지 통계</h2>
+            <table id="user-stats-table">
+                <thead>
+                    <tr>
+                        <th>유저</th>
+                        <th>총 데미지</th>
+                        <th>기여도</th>
+                        <th>DPS</th>
+                        <th>최소 DPS</th>
+                        <th>최대 DPS</th>
+                        <th>타수</th>
+                        <th>치명타율</th>
+                        <th>추가타율</th>
+                    </tr>
+                </thead>
+                <tbody id="user-stats-body">
+                    <!-- 유저 통계가 여기에 표시됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="skill-section" id="skill-section" style="display: none;">
+            <h2>스킬별 데미지 순위 - <span id="selected-user-id">유저</span></h2>
+            <div class="skill-grid" id="skill-grid">
+                <!-- 스킬 카드가 여기에 표시됩니다 -->
+            </div>
+        </div>
+        
+        <div class="skill-usage-section" id="skill-usage-section" style="display: none;">
+            <h2>데미지 히스토리 - <span id="skill-usage-user-id">유저</span></h2>
+            <div class="skill-usage-list" id="skill-usage-list">
+                <!-- 데미지 히스토리가 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let dpsChart = null;
+        let dpsData = {
+            labels: [],
+            datasets: []
+        };
+        let userColors = {};
+        let colorIndex = 0;
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#F9DC5C', '#E84855',
+            '#3BCEAC', '#8B5CF6', '#F97316', '#10B981', '#F472B6'
+        ];
+        let currentStatsData = null; // Store current stats for filtering
+        let selectedUserId = null; // Store currently selected user ID
+        let selfUserId = null;
+        let jobMapping = {};
+        let skillMapping = {};
+        let singleMode = false; // Single mode (허수아비 모드) flag
+
+        // DPS 차트 업데이트 타이머 제거 (공격하지 않을 때 0으로 떨어지는 기능 제거)
+
+        // Initialize Chart
+        const ctx = document.getElementById('dpsChart').getContext('2d');
+        dpsChart = new Chart(ctx, {
+            type: 'line',
+            data: dpsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0
+                },
+                scales: {
+                    x: {
+                        type: 'category',
+                        ticks: {
+                            color: '#888',
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 20,
+                            callback: function(value, index) {
+                                // 줌 레벨에 따라 표시 간격 조정
+                                const totalLabels = this.chart.data.labels.length;
+                                const displayedLabels = this.chart.scales.x.ticks.length;
+                                
+                                if (totalLabels > 100 && displayedLabels > 20) {
+                                    // 많은 데이터일 때는 더 적게 표시
+                                    return index % 5 === 0 ? value : '';
+                                }
+                                return value;
+                            }
+                        },
+                        grid: {
+                            color: '#3a3a3a'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#888',
+                            callback: function(value) {
+                                return formatNumber(value);
+                            }
+                        },
+                        grid: {
+                            color: '#3a3a3a'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatNumber(context.parsed.y);
+                            }
+                        }
+                    },
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                speed: 0.1
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x'
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: null
+                        },
+                        limits: {
+                            x: {
+                                minRange: 60  // 최소 60개 데이터 포인트 (1분)
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function toggleSingleMode() {
+            singleMode = document.getElementById('singleModeCheckbox').checked;
+            console.log('허수아비 모드:', singleMode);
+            
+            // Send mode update to server if connected
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'config',
+                    singleMode: singleMode
+                }));
+            }
+        }
+        
+
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                console.log('웹소켓이 이미 연결되어 있습니다');
+                return;
+            }
+
+            ws = new WebSocket('ws://localhost:5000/ws');
+
+            ws.onopen = function() {
+                console.log('웹소켓 연결됨');
+                updateConnectionStatus(true);
+                
+                // Send initial single mode configuration
+                ws.send(JSON.stringify({
+                    type: 'config',
+                    singleMode: singleMode
+                }));
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+
+            ws.onerror = function(error) {
+                console.error('웹소켓 오류:', error);
+                updateConnectionStatus(false);
+            };
+
+            ws.onclose = function() {
+                console.log('웹소켓 연결 끊김');
+                updateConnectionStatus(false);
+            };
+        }
+
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function handleWebSocketMessage(message) {
+            console.log('웹소켓 메시지 수신:', message);
+            
+            switch(message.type) {
+                case 'stats':
+                    console.log('통계 데이터:', message.data);
+                    updateStats(message.data);
+                    break;
+                case 'json':
+                    // Handle packet data for job mapping and self detection
+                    console.log('패킷 수신:', message.data);
+                    processPacketData(message.data);
+                    break;
+                case 'skill':
+                case 'skill2':
+                case 'skill3':
+                    // Handle skill mappings if needed
+                    console.log('스킬 매핑 수신:', message.type);
+                    break;
+                case 'test':
+                    console.log('테스트 메시지:', message.data);
+                    break;
+                default:
+                    console.log('알 수 없는 메시지 타입:', message.type);
+            }
+        }
+
+        function updateStats(stats) {
+            if (!stats) {
+                console.warn('통계 데이터가 수신되지 않았습니다');
+                return;
+            }
+            
+            // Store current stats data
+            currentStatsData = stats;
+            
+            // Update self user ID from backend
+            if (stats.self_user_id && stats.self_user_id > 0) {
+                selfUserId = stats.self_user_id;
+                console.log('자신의 사용자 ID 업데이트:', selfUserId);
+            }
+            
+            // Update main stats
+            document.getElementById('total-damage').textContent = formatNumber(stats.total_damage || 0);
+            document.getElementById('dps').textContent = formatNumber(Math.round(stats.dps || 0));
+            document.getElementById('duration').textContent = formatDuration(stats.duration_seconds || 0);
+
+            // Update user table
+            updateUserTable(stats.users || []);
+
+
+            // Update DPS chart
+            updateDPSChart(stats);
+            
+            // Update skill section if a user is selected
+            if (selectedUserId !== null && stats.users) {
+                const selectedUser = stats.users.find(u => u.user_id == selectedUserId);
+                if (selectedUser) {
+                    updateSelectedUserSkills(selectedUser);
+                    updateSkillUsageHistory(selectedUser);
+                } else {
+                    // User no longer exists, hide skill section
+                    document.getElementById('skill-section').style.display = 'none';
+                    document.getElementById('skill-usage-section').style.display = 'none';
+                    selectedUserId = null;
+                }
+            }
+        }
+
+        function updateUserTable(users) {
+            const tbody = document.getElementById('user-stats-body');
+            tbody.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                const row = tbody.insertRow();
+                row.innerHTML = '<td colspan="9" style="text-align: center; color: #888;">데이터 없음</td>';
+                return;
+            }
+
+            // Filter users: only show users with job mapping or self
+            const filteredUsers = users.filter(user => {
+                const isMe = user.user_id == selfUserId;
+                const hasJob = user.job_name != null;
+                return isMe || hasJob;
+            });
+            
+            filteredUsers.forEach(user => {
+                const row = tbody.insertRow();
+                row.style.cursor = 'pointer';
+                
+                // Determine if this user is "self" and get job name
+                const isMe = user.user_id == selfUserId;
+                const jobName = getUserJobName(user.user_id, user);
+                const displayName = isMe ? "자신" : jobName;
+                
+                console.log(`사용자 ${user.user_id}: isMe=${isMe}, jobName=${jobName}, displayName=${displayName}, hasJob=${user.job_name != null}`);
+                
+                // Add special styling for self
+                if (isMe) {
+                    row.style.backgroundColor = '#2c1810';
+                    row.style.borderLeft = '4px solid #ff6b6b';
+                }
+                
+                row.innerHTML = `
+                    <td>
+                        <span class="user-display-name ${isMe ? 'me' : ''}">${displayName}</span>
+                    </td>
+                    <td class="number">${formatNumber(user.total_damage)}</td>
+                    <td>
+                        <div class="damage-bar">
+                            <div class="damage-fill" style="width: ${user.damage_percent}%"></div>
+                            <span class="damage-percent">${user.damage_percent.toFixed(1)}%</span>
+                        </div>
+                    </td>
+                    <td class="number">${formatNumber(Math.round(user.dps))}</td>
+                    <td class="number">${formatNumber(Math.round(user.min_dps || 0))}</td>
+                    <td class="number">${formatNumber(Math.round(user.max_dps || 0))}</td>
+                    <td class="number">${formatNumber(user.hit_count || 0)}</td>
+                    <td class="crit-indicator">${user.crit_rate.toFixed(1)}%</td>
+                    <td>${user.addhit_rate.toFixed(1)}%</td>
+                `;
+                
+                // Add click handler
+                row.addEventListener('click', () => {
+                    showUserSkills(user);
+                });
+            });
+        }
+
+        function showUserSkills(user) {
+            // Store selected user ID
+            selectedUserId = user.user_id;
+            
+            // Show skill section
+            const skillSection = document.getElementById('skill-section');
+            skillSection.style.display = 'block';
+            
+            // Show skill usage section
+            const skillUsageSection = document.getElementById('skill-usage-section');
+            skillUsageSection.style.display = 'block';
+            
+            // Update the skills display
+            updateSelectedUserSkills(user);
+            
+            // Update skill usage history
+            updateSkillUsageHistory(user);
+            
+            // Scroll to skill section
+            skillSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        function updateSelectedUserSkills(user) {
+            // Update user ID in title with job name and self indicator
+            const isMe = user.user_id == selfUserId;
+            const jobName = getUserJobName(user.user_id, user);
+            const displayName = isMe ? "자신" : jobName;
+            document.getElementById('selected-user-id').textContent = displayName;
+            
+            // Update skill grid with selected user's skills
+            const skillGrid = document.getElementById('skill-grid');
+            skillGrid.innerHTML = '';
+            
+            if (!user.skills || user.skills.length === 0) {
+                skillGrid.innerHTML = '<div style="text-align: center; color: #888; grid-column: 1/-1;">스킬 데이터 없음</div>';
+                return;
+            }
+
+            // Sort skills by total damage
+            const sortedSkills = [...user.skills].sort((a, b) => b.total_damage - a.total_damage);
+
+            sortedSkills.forEach(skill => {
+                const skillCard = document.createElement('div');
+                skillCard.className = 'skill-card';
+                
+                // 데미지 히스토리 HTML 생성
+                let historyHtml = '';
+                if (skill.recent_damages && skill.recent_damages.length > 0) {
+                    historyHtml = `
+                        <div class="damage-history">
+                            <div class="history-title">최근 데미지:</div>
+                            <div class="history-list">
+                                ${skill.recent_damages.map(dmg => `
+                                    <span class="history-item ${dmg.is_crit ? 'crit' : ''} ${dmg.is_dot ? 'dot' : ''} ${dmg.is_addhit ? 'addhit' : ''}">
+                                        ${formatNumber(dmg.damage)}${dmg.is_crit ? '!' : ''}${dmg.is_dot ? '·' : ''}${dmg.is_addhit ? '+' : ''}
+                                    </span>
+                                `).join(' → ')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                skillCard.innerHTML = `
+                    <div class="skill-header">
+                        <div class="skill-name">${skill.skill_name}</div>
+                        <div class="skill-percent">${skill.damage_percent.toFixed(1)}%</div>
+                    </div>
+                    <div class="skill-stats">
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">총합:</span>
+                            <span class="skill-stat-value number">${formatNumber(skill.total_damage)}</span>
+                        </div>
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">평균:</span>
+                            <span class="skill-stat-value number">${formatNumber(skill.avg_damage)}</span>
+                        </div>
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">치명타:</span>
+                            <span class="skill-stat-value crit-indicator">${skill.crit_rate.toFixed(1)}%</span>
+                        </div>
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">최대:</span>
+                            <span class="skill-stat-value number">${formatNumber(skill.max_damage)}</span>
+                        </div>
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">타수:</span>
+                            <span class="skill-stat-value number">${formatNumber(skill.hit_count || 0)}</span>
+                        </div>
+                        <div class="skill-stat">
+                            <span class="skill-stat-label">추가타:</span>
+                            <span class="skill-stat-value">${skill.addhit_rate?.toFixed(1) || 0}%</span>
+                        </div>
+                    </div>
+                    ${historyHtml}
+                `;
+                skillGrid.appendChild(skillCard);
+            });
+        }
+
+
+
+
+
+        function updateDPSChart(stats) {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            // 마지막 업데이트 시간 갱신
+            // lastUpdateTime 제거 (공격하지 않을 때 0으로 떨어지는 기능 제거)
+            
+            // Add timestamp to labels
+            dpsData.labels.push(timestamp);
+            
+            // 디버깅: stats 데이터 확인
+            console.log(`DPS 업데이트 시간: ${timestamp}, 유저 수: ${stats.users?.length || 0}`);
+
+            // Filter users first, then create set of current user IDs for quick lookup
+            const filteredUsersForChart = stats.users.filter(user => {
+                const isMe = user.user_id == selfUserId;
+                const hasJob = user.job_name != null;
+                return isMe || hasJob;
+            });
+            const currentUserIds = new Set(filteredUsersForChart.map(user => user.user_id));
+            
+            // 기존 데이터셋 업데이트 - 모든 기존 데이터셋에 대해 0 또는 실제 DPS 추가
+            dpsData.datasets.forEach(dataset => {
+                if (dataset.userId) {
+                    const user = filteredUsersForChart.find(u => u.user_id == dataset.userId);
+                    
+                    // 유저가 존재하면 현재 DPS 추가, 없으면 0 추가
+                    dataset.data.push(user ? Math.round(user.dps || 0) : 0);
+                }
+            });
+            
+            // 새로운 유저 추가
+            filteredUsersForChart.forEach(user => {
+                const isMe = user.user_id == selfUserId;
+                const jobName = getUserJobName(user.user_id, user);
+                const displayName = isMe ? "자신" : jobName;
+                const userLabel = displayName;
+                
+                let dataset = dpsData.datasets.find(d => d.userId === user.user_id);
+                
+                if (!dataset) {
+                    console.log(`새로운 유저 추가: ${user.user_id} - ${displayName}`);
+                    
+                    if (!userColors[user.user_id]) {
+                        userColors[user.user_id] = colors[colorIndex % colors.length];
+                        colorIndex++;
+                    }
+                    
+                    // 새 데이터셋 생성 시 이전 데이터를 0으로 채움
+                    const newData = new Array(dpsData.labels.length - 1).fill(0);
+                    newData.push(Math.round(user.dps || 0));
+                    
+                    dataset = {
+                        label: userLabel,
+                        userId: user.user_id,
+                        data: newData,
+                        borderColor: userColors[user.user_id],
+                        backgroundColor: userColors[user.user_id] + '20',
+                        tension: 0.1,
+                        fill: false,
+                        hidden: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    };
+                    dpsData.datasets.push(dataset);
+                }
+            });
+            
+            // 더 이상 활성하지 않은 유저의 데이터셋 제거
+            dpsData.datasets = dpsData.datasets.filter(dataset => {
+                if (dataset.userId) {
+                    return currentUserIds.has(dataset.userId);
+                }
+                return false;
+            });
+            
+            // Log current datasets for debugging
+            console.log('현재 차트 데이터셋:', dpsData.datasets.map(d => d.label));
+
+            dpsChart.update();
+        }
+
+        // updateDPSChartWithZero 함수 제거 (공격하지 않을 때 0으로 떨어지는 기능 제거)
+
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            
+            if (connected) {
+                indicator.className = 'status-indicator status-connected';
+                text.textContent = '연결됨';
+            } else {
+                indicator.className = 'status-indicator status-disconnected';
+                text.textContent = '연결 끊김';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 100000000) { // 1억 이상
+                return (num / 100000000).toFixed(1) + '억';
+            } else if (num >= 10000) { // 1만 이상
+                return (num / 10000).toFixed(1) + '만';
+            }
+            return num.toLocaleString('ko-KR');
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function getUserJobName(userId, user) {
+            // Use job name from backend if available, otherwise use user ID
+            if (user && user.job_name) {
+                console.log(`사용자 ${userId}의 직업명: ${user.job_name}`);
+                return user.job_name;
+            }
+            console.log(`사용자 ${userId}의 직업명 없음, 기본값 사용`);
+            return `유저${userId}`;
+        }
+        
+        function processJobMapping(skillName, userId) {
+            if (jobMapping[userId]) return; // Already mapped
+            
+            const sk = skillName.toLowerCase();
+            
+            if (sk.includes("expertwarrior")) jobMapping[userId] = "전사";
+            else if (sk.includes("greatsword")) jobMapping[userId] = "대검";
+            else if (sk.includes("swordmaster")) jobMapping[userId] = "검술";
+            else if (sk.includes("healer")) jobMapping[userId] = "힐러";
+            else if (sk.includes("monk")) jobMapping[userId] = "수도";
+            else if (sk.includes("priest")) jobMapping[userId] = "사제";
+            else if (sk.includes("bard")) jobMapping[userId] = "음유";
+            else if (sk.includes("battlemusician")) jobMapping[userId] = "악사";
+            else if (sk.includes("dancer")) jobMapping[userId] = "댄서";
+            else if (sk.includes("fighter")) jobMapping[userId] = "격가";
+            else if (sk.includes("dualblades")) jobMapping[userId] = "듀블";
+            else if (sk.includes("highthief")) jobMapping[userId] = "도적";
+            else if (sk.includes("highmage")) jobMapping[userId] = "븝미";
+            else if (sk.includes("firemage")) jobMapping[userId] = "화법";
+            else if (sk.includes("icemage")) jobMapping[userId] = "빙결";
+            else if (sk.includes("lightningmage")) jobMapping[userId] = "전격";
+            else if (sk.includes("higharcher")) jobMapping[userId] = "궁수";
+            else if (sk.includes("arbalist")) jobMapping[userId] = "석궁";
+            else if (sk.includes("longbowman")) jobMapping[userId] = "장궁";
+            else if (sk.includes("novice")) jobMapping[userId] = "뉴비";
+            else if (sk.includes("novicewarrior_shieldbash")) jobMapping[userId] = null;
+            else if (sk.includes("defaultattack")) jobMapping[userId] = null;
+            else jobMapping[userId] = null;
+        }
+        
+        function processPacketData(packets) {
+            if (!packets || !Array.isArray(packets)) return;
+            
+            packets.forEach(packet => {
+                if (packet.type === 100041 && packet.skill_name && packet.user_id) {
+                    // Process job mapping from skill name (ActionPacket)
+                    processJobMapping(packet.skill_name, packet.user_id);
+                }
+                
+                if (packet.type === 10701 && packet.user_id) {
+                    // Track self damage to identify the player (SelfDamagePacket)
+                    if (!selfUserId) {
+                        selfUserId = packet.user_id;
+                        console.log('자신의 사용자 ID 감지:', selfUserId);
+                    }
+                }
+            });
+        }
+
+        function updateSkillUsageHistory(user) {
+            // Update user ID in title with job name and self indicator
+            const isMe = user.user_id == selfUserId;
+            const jobName = getUserJobName(user.user_id, user);
+            const displayName = isMe ? "자신" : jobName;
+            document.getElementById('skill-usage-user-id').textContent = displayName;
+            
+            // Update skill usage list
+            const skillUsageList = document.getElementById('skill-usage-list');
+            skillUsageList.innerHTML = '';
+            
+            if (!user.skill_usage_history || user.skill_usage_history.length === 0) {
+                skillUsageList.innerHTML = '<div style="text-align: center; color: #888;">데미지 기록 없음</div>';
+                return;
+            }
+            
+            // Display skill usage history (already sorted by timestamp in backend)
+            user.skill_usage_history.forEach(usage => {
+                const item = document.createElement('div');
+                item.className = 'skill-usage-item';
+                
+                // Format timestamp to HH:MM:SS
+                const date = new Date(usage.timestamp);
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                const timeStr = `${hours}:${minutes}:${seconds}`;
+                
+                // Create flags HTML
+                let flagsHtml = '';
+                if (usage.is_crit) flagsHtml += '<span class="damage-flag crit">치명</span>';
+                if (usage.is_addhit) flagsHtml += '<span class="damage-flag addhit">추가</span>';
+                if (usage.is_dot) flagsHtml += '<span class="damage-flag dot">도트</span>';
+                
+                item.innerHTML = `
+                    <span class="skill-usage-time">${timeStr}</span>
+                    <span class="skill-usage-name">${usage.skill_name}</span>
+                    <span class="skill-usage-damage">${formatNumber(usage.damage)}</span>
+                    <div class="skill-usage-flags">${flagsHtml}</div>
+                `;
+                
+                skillUsageList.appendChild(item);
+            });
+        }
+        
+        async function clearStats() {
+            if (confirm('모든 데미지 통계를 초기화하시겠습니까?')) {
+                try {
+                    const response = await fetch('/api/v1/damage/clear', { method: 'POST' });
+                    const result = await response.json();
+                    console.log('통계 초기화됨:', result);
+                    
+                    // Clear chart data
+                    dpsData.labels = [];
+                    dpsData.datasets = [];
+                    dpsChart.update();
+                    
+                    
+                    // Reset color assignment
+                    userColors = {};
+                    colorIndex = 0;
+                    
+                    // Clear selected user and hide skill section
+                    selectedUserId = null;
+                    document.getElementById('skill-section').style.display = 'none';
+                    document.getElementById('skill-usage-section').style.display = 'none';
+                    
+                    // Clear current stats data
+                    currentStatsData = null;
+                    
+                    // Clear self user ID
+                    selfUserId = null;
+                    
+                    // Clear job mapping
+                    jobMapping = {};
+                    
+                    // Clear color mapping
+                    userColors = {};
+                    colorIndex = 0;
+                    
+                    // Clear UI immediately
+                    document.getElementById('total-damage').textContent = '0';
+                    document.getElementById('dps').textContent = '0';
+                    document.getElementById('duration').textContent = '0:00';
+                    document.getElementById('user-stats-body').innerHTML = '';
+                    document.getElementById('skill-grid').innerHTML = '';
+                } catch (error) {
+                    console.error('통계 초기화 오류:', error);
+                }
+            }
+        }
+
+        async function clearDPS() {
+            if (confirm('DPS 통계를 초기화하시겠습니까?')) {
+                try {
+                    const response = await fetch('/api/v1/damage/clear/dps', { method: 'POST' });
+                    const result = await response.json();
+                    console.log('DPS 초기화됨:', result);
+                } catch (error) {
+                    console.error('DPS 초기화 오류:', error);
+                }
+            }
+        }
+        
+        // 차트가 최신 데이터를 자동으로 따라가도록 설정
+        function autoFollowLatestData() {
+            if (!dpsChart || !dpsData.labels || dpsData.labels.length === 0) return;
+            
+            const totalDataPoints = dpsData.labels.length;
+            const currentMin = dpsChart.scales.x.min;
+            const currentMax = dpsChart.scales.x.max;
+            const currentRange = currentMax - currentMin + 1;
+            
+            // 현재 보고 있는 범위가 최신 데이터를 포함하지 않으면 이동
+            if (currentMax < totalDataPoints - 1) {
+                const shift = totalDataPoints - 1 - currentMax;
+                dpsChart.options.scales.x.min = currentMin + shift;
+                dpsChart.options.scales.x.max = currentMax + shift;
+                dpsChart.update('none');
+            }
+        }
+        
+        // 줌 범위 제한 적용
+        function enforceZoomLimits(chart) {
+            if (!chart || !dpsData.labels) return;
+            
+            const totalDataPoints = dpsData.labels.length;
+            const currentMin = chart.scales.x.min;
+            const currentMax = chart.scales.x.max;
+            const currentRange = currentMax - currentMin + 1;
+            
+            // 최대 줌 아웃 범위: 5분 (1초 간격 x 300개 = 300초)
+            const maxZoomRange = 300;
+            // 최대 줌 인 범위: 1분 (1초 간격 x 60개 = 60초)
+            const minZoomRange = 60;
+            
+            let needsUpdate = false;
+            let newMin = currentMin;
+            let newMax = currentMax;
+            
+            // 범위가 너무 크면 제한
+            if (currentRange > maxZoomRange) {
+                // 최신 데이터를 기준으로 5분만 표시
+                newMax = totalDataPoints - 1;
+                newMin = Math.max(0, newMax - maxZoomRange + 1);
+                needsUpdate = true;
+            }
+            // 범위가 너무 작으면 제한
+            else if (currentRange < minZoomRange) {
+                newMax = Math.min(totalDataPoints - 1, newMin + minZoomRange - 1);
+                if (newMax >= totalDataPoints - 1) {
+                    newMax = totalDataPoints - 1;
+                    newMin = Math.max(0, newMax - minZoomRange + 1);
+                }
+                needsUpdate = true;
+            }
+            
+            // 최신 데이터가 보이도록 확인
+            if (newMax < totalDataPoints - 1) {
+                const shift = totalDataPoints - 1 - newMax;
+                newMin += shift;
+                newMax += shift;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+                chart.options.scales.x.min = newMin;
+                chart.options.scales.x.max = newMax;
+                chart.update('none');
+            }
+        }
+
+
+        // Auto-connect on page load
+        window.addEventListener('load', () => {
+            setTimeout(connectWebSocket, 1000);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (ws) {
+                ws.close();
+            }
+        });
+
+    </script>
+</body>
+</html>
