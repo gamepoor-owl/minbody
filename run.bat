@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 > nul
 setlocal enabledelayedexpansion
 set "CONSOLE_FONT=Consolas"
 title M-Inbody 데미지 미터
