@@ -10,15 +10,18 @@ echo ===============================================
 echo.
 
 REM Java 17 이상이 설치되어 있는지 확인
-java -version > nul 2>&1
+echo [INFO] Java 버전 확인 중...
+java -version 2>&1 | findstr /i "version" > temp_java_check.txt
 if %errorlevel% neq 0 (
     echo [ERROR] Java가 설치되어 있지 않습니다.
     echo Java 17 이상을 설치해주세요.
     echo 다운로드: https://adoptium.net/
     echo.
+    del temp_java_check.txt 2>nul
     pause
     exit /b 1
 )
+del temp_java_check.txt 2>nul
 
 REM 현재 디렉토리로 이동
 cd /d "%~dp0"
@@ -38,6 +41,8 @@ if exist "m-inbody-0.0.1-SNAPSHOT.jar" (
 )
 
 echo [INFO] 시스템 진단 중...
+echo [DEBUG] 현재 디렉토리: %cd%
+echo [DEBUG] 스크립트 위치: %~dp0
 
 REM 네트워크 어댑터 확인
 echo [INFO] 네트워크 어댑터 확인 중...
@@ -61,12 +66,15 @@ echo [INFO] 종료하려면 Ctrl+C를 누르세요.
 echo.
 
 REM 관리자 권한으로 실행 (패킷 캡처를 위해 필요)
+echo [INFO] 관리자 권한 확인 중...
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo [WARNING] 관리자 권한이 필요합니다.
     echo 패킷 캡처를 위해 관리자 권한으로 실행해주세요.
     echo.
-    powershell -Command "Start-Process cmd -ArgumentList '/c \"%~f0\"' -Verb runAs"
+    echo 관리자 권한으로 재실행하려면 아무 키나 누르세요...
+    pause > nul
+    powershell -Command "Start-Process cmd -ArgumentList '/c cd /d \"%~dp0\" && \"%~nx0\"' -Verb runAs -WorkingDirectory '%~dp0'"
     exit /b
 )
 
