@@ -70,10 +70,17 @@ Write-Host "[INFO] 웹 브라우저에서 http://localhost:5000 으로 접속하
 Write-Host "[INFO] 종료하려면 Ctrl+C를 누르세요." -ForegroundColor Yellow
 Write-Host ""
 
+# 인코딩 환경 변수 설정
+$env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+
 # 애플리케이션 실행
 $javaArgs = @(
     "-Dfile.encoding=UTF-8",
     "-Dconsole.encoding=UTF-8",
+    "-Dsun.stdout.encoding=UTF-8",
+    "-Dsun.stderr.encoding=UTF-8",
+    "-Duser.language=ko",
+    "-Duser.country=KR",
     "-jar", $jarFile,
     "--spring.profiles.active=prod",
     "--logging.level.com.hanaset.minbody=DEBUG",

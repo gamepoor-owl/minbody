@@ -1,6 +1,8 @@
 @echo off
+chcp 65001 > nul
 setlocal enabledelayedexpansion
 set "CONSOLE_FONT=Consolas"
+set JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
 title M-Inbody Damage Meter
 
 echo ===============================================
@@ -78,7 +80,7 @@ if %errorlevel% neq 0 (
 )
 
 REM Run application (with debug mode for detailed logs)
-java -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8 -jar %JAR_FILE% --spring.profiles.active=prod --logging.level.com.hanaset.minbody=DEBUG --logging.level.org.pcap4j=DEBUG
+java -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -Duser.language=ko -Duser.country=KR -jar %JAR_FILE% --spring.profiles.active=prod --logging.level.com.hanaset.minbody=DEBUG --logging.level.org.pcap4j=DEBUG
 
 echo.
 echo [INFO] Application terminated.
