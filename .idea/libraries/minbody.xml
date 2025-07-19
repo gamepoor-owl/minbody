@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="minbody">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/minbody-106.zip!/" />
+      <root url="jar://$PROJECT_DIR$/m-inbody-0.0.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
