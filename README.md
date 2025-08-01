@@ -2,6 +2,8 @@
 
 Spring Boot 기반 게임 패킷 분석 데미지 미터입니다.
 
+문의는 : https://discord.gg/kDXpuEd3Em
+
 ## 시스템 요구사항
 
 - **Java 17 이상** (필수)
